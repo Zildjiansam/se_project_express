@@ -1,6 +1,5 @@
 const User = require("../models/userMod");
 const {
-  NO_CONTENT,
   INVALID_DATA,
   NOT_FOUND,
   SERVER_ERROR,

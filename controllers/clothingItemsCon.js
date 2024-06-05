@@ -1,6 +1,5 @@
 const Item = require("../models/clothingItemsMod");
 const {
-  NO_CONTENT,
   INVALID_DATA,
   NOT_FOUND,
   SERVER_ERROR,
