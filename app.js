@@ -1,6 +1,9 @@
 const express = require("express");
+
 const mongoose = require("mongoose");
+
 const app = express();
+
 const mainRouter = require("./routes/routesIndex");
 
 const { PORT = 3001 } = process.env;
