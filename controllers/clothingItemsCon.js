@@ -41,7 +41,7 @@ module.exports.deleteItem = (req, res) => {
   console.log(itemId);
   Item.findByIdAndDelete(itemId)
     .orFail()
-    .then((item) => res.status(NO_CONTENT).send({}))
+    .then((item) => console.log(item), res.status(NO_CONTENT).send({}))
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
