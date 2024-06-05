@@ -97,7 +97,7 @@ module.exports.deleteLike = (req, res) => {
         res.status(NOT_FOUND).send({ message: "Item ID not found" });
       }
       if (err.name === "CastError") {
-        return res.status(NOT_FOUND).send({ message: "User ID not found" });
+        return res.status(INVALID_DATA).send({ message: "User ID not found" });
       }
       return res
         .status(SERVER_ERROR)
