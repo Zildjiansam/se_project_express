@@ -41,9 +41,14 @@ module.exports.deleteItem = (req, res) => {
   console.log(itemId);
   Item.findByIdAndDelete(itemId)
     .orFail()
-    .then((item) => console.log(item), res.status(NO_CONTENT).send({}))
+    .then((item) =>
+      res
+        .status(REQUEST_SUCCESSFUL)
+        .send(item, { message: "Item successfully deleted" })
+    )
     .catch((err) => {
       console.error(err);
+      console.log(err.name);
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "User ID not found" });
       }
@@ -67,7 +72,7 @@ module.exports.likeItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (!req.user.id) {
-        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
+        return res.status(INVALID_DATA).send({ message: "Item ID not found" });
       }
       if (err.name === "CastError") {
         return res.status(INVALID_DATA).send({ message: "Invalid ID used" });
@@ -84,12 +89,13 @@ module.exports.deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   )
+    .orFail()
     .then((item) => res.status(REQUEST_SUCCESSFUL).send(item))
     .catch((err) => {
       console.error(err);
       console.log(err.name);
-      if (!req.user.id) {
-        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
+      if (err.name === "DocumentNotFoundError") {
+        res.status(NOT_FOUND).send({ message: "Item ID not found" });
       }
       if (err.name === "CastError") {
         return res.status(NOT_FOUND).send({ message: "User ID not found" });
