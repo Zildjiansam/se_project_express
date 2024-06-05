@@ -4,6 +4,7 @@ const {
   createItem,
   deleteItem,
   likeItem,
+  deleteLike,
 } = require("../controllers/clothingItemsCon");
 
 router.get("/", getItems);

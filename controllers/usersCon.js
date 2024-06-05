@@ -13,7 +13,7 @@ module.exports.getUser = (req, res) => {
   const { userId } = req.params;
   User.findById(userId)
     .orFail(() => {
-      const error = new Error("Item ID not found");
+      const error = new Error("User ID not found");
       error.statusCode = 404;
       throw error;
     })

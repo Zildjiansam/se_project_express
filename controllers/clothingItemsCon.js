@@ -1,11 +1,21 @@
 const Item = require("../models/clothingItemsMod");
+const {
+  NO_CONTENT,
+  INVALID_DATA,
+  NOT_FOUND,
+  SERVER_ERROR,
+  REQUEST_SUCCESSFUL,
+  REQUEST_CREATED,
+} = require("../utils/errorCodes");
 
 module.exports.getItems = (req, res) => {
   Item.find({})
-    .then((items) => res.status(200).send(items))
+    .then((items) => res.status(REQUEST_SUCCESSFUL).send(items))
     .catch((err) => {
       console.error(err);
-      return res.status(500).send({ message: err.message });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An internal server error has occured." });
     });
 };
 
@@ -13,11 +23,16 @@ module.exports.createItem = (req, res) => {
   const { name, weather, imageUrl } = req.body;
   Item.create({ name, weather, imageUrl, owner: req.user._id })
     .then((item) => {
-      res.status(200).send(item);
+      res.status(REQUEST_CREATED).send(item);
     })
     .catch((err) => {
       console.error(err);
-      return res.status(500).send({ message: err.message });
+      if (err.name === "ValidationError") {
+        return res.status(INVALID_DATA).send({ message: "Invalid data entry" });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An internal server error has occured." });
     });
 };
 
@@ -25,15 +40,19 @@ module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
   console.log(itemId);
   Item.findByIdAndDelete(itemId)
-    .orFail(() => {
-      const error = new Error("Item ID not found");
-      error.statusCode = 404;
-      throw error;
-    })
-    .then((item) => res.status(204).send({}))
+    .orFail()
+    .then((item) => res.status(NO_CONTENT).send({}))
     .catch((err) => {
       console.error(err);
-      return res.status(500).send({ message: err.message });
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "User ID not found" });
+      }
+      if (err.name === "CastError") {
+        return res.status(INVALID_DATA).send({ message: "Invalid ID used" });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An internal server error has occured." });
     });
 };
 
@@ -43,15 +62,19 @@ module.exports.likeItem = (req, res) => {
     { $addToSet: { likes: req.user.id } },
     { new: true }
   )
-    .orFail(() => {
-      const error = new Error("Item ID not found");
-      error.statusCode = 404;
-      throw error;
-    })
-    .then((item) => res.status(200).send(item))
+    .orFail()
+    .then((item) => res.status(REQUEST_CREATED).send(item))
     .catch((err) => {
       console.error(err);
-      return res.status(500).send({ message: err.message });
+      if (!req.user.id) {
+        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
+      }
+      if (err.name === "CastError") {
+        return res.status(INVALID_DATA).send({ message: "Invalid ID used" });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An internal server error has occured." });
     });
 };
 
@@ -61,14 +84,18 @@ module.exports.deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true }
   )
-    .orFail(() => {
-      const error = new Error("Item ID not found");
-      error.statusCode = 404;
-      throw error;
-    })
-    .then((item) => res.status(200).send(item))
+    .then((item) => res.status(REQUEST_SUCCESSFUL).send(item))
     .catch((err) => {
       console.error(err);
-      return res.status(500).send({ message: err.message });
+      console.log(err.name);
+      if (!req.user.id) {
+        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
+      }
+      if (err.name === "CastError") {
+        return res.status(NOT_FOUND).send({ message: "User ID not found" });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An internal server error has occured." });
     });
 };
