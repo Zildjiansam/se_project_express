@@ -71,7 +71,7 @@ module.exports.likeItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (!req.user.id) {
-        return res.status(INVALID_DATA).send({ message: "Item ID not found" });
+        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
       }
       if (err.name === "CastError") {
         return res.status(INVALID_DATA).send({ message: "Invalid ID used" });
