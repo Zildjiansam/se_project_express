@@ -40,7 +40,7 @@ module.exports.deleteItem = (req, res) => {
   console.log(itemId);
   Item.findByIdAndDelete(itemId)
     .orFail()
-    .then((_) =>
+    .then(() =>
       res
         .status(REQUEST_SUCCESSFUL)
         .send({ message: "Item successfully deleted" })
