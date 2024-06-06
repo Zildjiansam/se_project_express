@@ -63,7 +63,7 @@ module.exports.deleteItem = (req, res) => {
 module.exports.likeItem = (req, res) => {
   Item.findByIdAndUpdate(
     req.params.itemId,
-    { $addToSet: { likes: req.user.id } },
+    { $addToSet: { likes: req.user._id } },
     { new: true }
   )
     .orFail()
@@ -73,7 +73,7 @@ module.exports.likeItem = (req, res) => {
       if (err.name === "CastError") {
         return res.status(INVALID_DATA).send({ message: "Invalid ID used" });
       }
-      if (!req.user.id) {
+      if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Item ID not found" });
       }
       return res
