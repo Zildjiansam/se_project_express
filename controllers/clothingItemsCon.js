@@ -40,10 +40,10 @@ module.exports.deleteItem = (req, res) => {
   console.log(itemId);
   Item.findByIdAndDelete(itemId)
     .orFail()
-    .then((item) =>
+    .then((_) =>
       res
         .status(REQUEST_SUCCESSFUL)
-        .send(item, { message: "Item successfully deleted" })
+        .send({ message: "Item successfully deleted" })
     )
     .catch((err) => {
       console.error(err);
@@ -92,12 +92,12 @@ module.exports.deleteLike = (req, res) => {
     .then((item) => res.status(REQUEST_SUCCESSFUL).send(item))
     .catch((err) => {
       console.error(err);
-      console.log(err.name);
+      console.log("CRASH HERE");
       if (err.name === "DocumentNotFoundError") {
-        res.status(NOT_FOUND).send({ message: "Item ID not found" });
+        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
       }
       if (err.name === "CastError") {
-        return res.status(INVALID_DATA).send({ message: "User ID not found" });
+        return res.status(INVALID_DATA).send({ message: "Invalid User ID" });
       }
       return res
         .status(SERVER_ERROR)
