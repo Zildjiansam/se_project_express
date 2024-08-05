@@ -1,55 +1,132 @@
 const User = require("../models/userMod");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../utils/config.js");
 const {
   INVALID_DATA,
   NOT_FOUND,
   SERVER_ERROR,
+  UNAUTHORIZED_ERROR,
   REQUEST_SUCCESSFUL,
   REQUEST_CREATED,
+  DATA_CONFLICT,
 } = require("../utils/errorCodes");
+const cl = console.log.bind(console);
 
-module.exports.getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.status(REQUEST_SUCCESSFUL).send(users))
+// module.exports.getUsers = (req, res) => {
+//   User.find({})
+//     .then((users) => res.status(REQUEST_SUCCESSFUL).send(users))
+//     .catch((err) => {
+//       console.error(err);
+//       return res
+//         .status(SERVER_ERROR)
+//         .send({ message: "An error has occurred on the server" });
+//     });
+// };
+
+// module.exports.getCurrentUser = (req, res) => {
+//   const { userId } = req.params;
+//   User.findById(userId)
+//     .orFail()
+//     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
+//     .catch((err) => {
+//       console.error(err);
+//       if (err.name === "DocumentNotFoundError") {
+//         return res.status(NOT_FOUND).send({ message: "User ID not found" });
+//       }
+//       if (err.name === "CastError") {
+//         return res
+//           .status(INVALID_DATA)
+//           .send({ message: "Invalid userId entered" });
+//       }
+//       return res
+//         .status(SERVER_ERROR)
+//         .send({ message: "An error has occurred on the server" });
+//     });
+// };
+
+module.exports.getCurrentUser = (req, res) => {
+  //isolate the user _id from the request body
+  const { _id } = req.user;
+  //use that _id to find and then respond with the current logged in user
+  User.findById(_id)
+    .orFail()
+    .then((user) => {
+      res.status(200).send(user);
+    })
     .catch((err) => {
-      console.error(err);
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      cl(err.name);
+      return res.status(NOT_FOUND).send({ message: "ERROR" });
     });
 };
 
-module.exports.getUser = (req, res) => {
-  const { userId } = req.params;
-  User.findById(userId)
-    .orFail()
+module.exports.updateUser = (req, res) => {
+  const { name, avatar } = req.body;
+
+  User.findByIdAndUpdate(
+    req.user._id,
+    { name, avatar },
+    { new: true, RunValidators: true, upsert: true }
+  )
     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
     .catch((err) => {
-      console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "User ID not found" });
-      }
-      if (err.name === "CastError") {
-        return res
-          .status(INVALID_DATA)
-          .send({ message: "Invalid userId entered" });
-      }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+      cl(err.name);
+      return res.status(NOT_FOUND).send({ message: "Error!!!" });
     });
 };
 
 module.exports.createUser = (req, res) => {
-  const { name, avatar } = req.body;
-  User.create({ name, avatar })
-    .then((user) => res.status(REQUEST_CREATED).send(user))
+  const { name, avatar, email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(INVALID_DATA)
+      .send({ message: "Email and password is required!" });
+  }
+
+  return bcrypt.hash(password, 10).then((hash) => {
+    User.create({ name, avatar, email, password: hash })
+      .then((user) => {
+        const userObj = user.toObject();
+        delete userObj.password;
+        res.status(REQUEST_CREATED).send(userObj);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (err.name === "ValidationError") {
+          return res
+            .status(INVALID_DATA)
+            .send({ message: "Invalid form entry" });
+        }
+        if (err.code === 11000) {
+          return res
+            .status(DATA_CONFLICT)
+            .send({ message: "Email already exists in database" });
+        }
+        return res
+          .status(SERVER_ERROR)
+          .send({ message: "An error has occurred on the server" });
+      });
+  });
+};
+
+module.exports.loginUser = (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(INVALID_DATA)
+      .send({ message: "Email and password is required!" });
+  }
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      res.status(REQUEST_SUCCESSFUL).send({ token });
+    })
     .catch((err) => {
-      console.error(err);
-      if (err.name === "ValidationError") {
-        return res.status(INVALID_DATA).send({ message: "Invalid form entry" });
-      }
       return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server" });
+        .status(UNAUTHORIZED_ERROR)
+        .send({ message: "Unauthorized user!" });
     });
 };

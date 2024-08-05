@@ -5,6 +5,7 @@ const {
   SERVER_ERROR,
   REQUEST_SUCCESSFUL,
   REQUEST_CREATED,
+  FORBIDDEN_ERROR,
 } = require("../utils/errorCodes");
 
 module.exports.getItems = (req, res) => {
@@ -37,25 +38,29 @@ module.exports.createItem = (req, res) => {
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
-  console.log(itemId);
-  Item.findByIdAndDelete(itemId)
+  Item.findById(itemId)
     .orFail()
-    .then(() =>
-      res
-        .status(REQUEST_SUCCESSFUL)
-        .send({ message: "Item successfully deleted" })
-    )
+    .then((item) => {
+      if (!item.owner.equals(req.user._id)) {
+        return res.status(FORBIDDEN_ERROR).send({
+          message: "Authorization needed to delete this clothing item",
+        });
+      }
+      return item
+        .deleteOne()
+        .then(() => res.send({ message: "clothing item has been deleted" }));
+    })
     .catch((err) => {
       console.error(err);
-      console.log(err.name);
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "User ID not found" });
+        return res.status(NOT_FOUND).send({ message: "Item ID not found" });
       }
       if (err.name === "CastError") {
-        return res.status(INVALID_DATA).send({ message: "Invalid ID used" });
+        return res.status(INVALID_DATA).send({ message: "Invalid data" });
       }
+
       return res
-        .status(SERVER_ERROR)
+        .status(ERROR_CODES.SERVER_ERROR)
         .send({ message: "An internal server error has occured." });
     });
 };
