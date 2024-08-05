@@ -60,7 +60,7 @@ module.exports.deleteItem = (req, res) => {
       }
 
       return res
-        .status(ERROR_CODES.SERVER_ERROR)
+        .status(SERVER_ERROR)
         .send({ message: "An internal server error has occured." });
     });
 };

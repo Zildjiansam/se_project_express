@@ -1,6 +1,6 @@
-const User = require("../models/userMod");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../models/userMod");
 const { JWT_SECRET } = require("../utils/config.js");
 const {
   INVALID_DATA,
@@ -11,39 +11,7 @@ const {
   REQUEST_CREATED,
   DATA_CONFLICT,
 } = require("../utils/errorCodes");
-const cl = console.log.bind(console);
-
-// module.exports.getUsers = (req, res) => {
-//   User.find({})
-//     .then((users) => res.status(REQUEST_SUCCESSFUL).send(users))
-//     .catch((err) => {
-//       console.error(err);
-//       return res
-//         .status(SERVER_ERROR)
-//         .send({ message: "An error has occurred on the server" });
-//     });
-// };
-
-// module.exports.getCurrentUser = (req, res) => {
-//   const { userId } = req.params;
-//   User.findById(userId)
-//     .orFail()
-//     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
-//     .catch((err) => {
-//       console.error(err);
-//       if (err.name === "DocumentNotFoundError") {
-//         return res.status(NOT_FOUND).send({ message: "User ID not found" });
-//       }
-//       if (err.name === "CastError") {
-//         return res
-//           .status(INVALID_DATA)
-//           .send({ message: "Invalid userId entered" });
-//       }
-//       return res
-//         .status(SERVER_ERROR)
-//         .send({ message: "An error has occurred on the server" });
-//     });
-// };
+// const cl = console.log.bind(console);
 
 module.exports.getCurrentUser = (req, res) => {
   //isolate the user _id from the request body
@@ -124,7 +92,7 @@ module.exports.loginUser = (req, res) => {
       });
       res.status(REQUEST_SUCCESSFUL).send({ token });
     })
-    .catch((err) => {
+    .catch(() => {
       return res
         .status(UNAUTHORIZED_ERROR)
         .send({ message: "Unauthorized user!" });
