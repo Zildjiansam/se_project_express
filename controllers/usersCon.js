@@ -21,7 +21,17 @@ module.exports.getCurrentUser = (req, res) => {
       res.status(200).send(user);
     })
     .catch((err) => {
-      return res.status(NOT_FOUND).send({ message: "ERROR" });
+      console.log(err.name);
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "Not found" });
+      }
+      if (err.name === "CastError") {
+        return res.status(INVALID_DATA).send({ message: "Invalid data" });
+      }
+      console.error(err);
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
