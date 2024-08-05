@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userMod");
-const { JWT_SECRET } = require("../utils/config.js");
+const { JWT_SECRET } = require("../utils/config");
 const {
   INVALID_DATA,
   NOT_FOUND,
@@ -15,15 +15,16 @@ const {
 
 module.exports.getCurrentUser = (req, res) => {
   //isolate the user _id from the request body
+
   const { _id } = req.user;
   //use that _id to find and then respond with the current logged in user
+
   User.findById(_id)
     .orFail()
     .then((user) => {
       res.status(200).send(user);
     })
     .catch((err) => {
-      cl(err.name);
       return res.status(NOT_FOUND).send({ message: "ERROR" });
     });
 };
@@ -38,7 +39,6 @@ module.exports.updateUser = (req, res) => {
   )
     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
     .catch((err) => {
-      cl(err.name);
       return res.status(NOT_FOUND).send({ message: "Error!!!" });
     });
 };
@@ -92,9 +92,13 @@ module.exports.loginUser = (req, res) => {
       });
       res.status(REQUEST_SUCCESSFUL).send({ token });
     })
-    .catch(() => {
-      return res
-        .status(UNAUTHORIZED_ERROR)
-        .send({ message: "Unauthorized user!" });
+    .catch((err) => {
+      console.log(err);
+      if (err.message === "Incorrect email or password") {
+        return res
+          .status(UNAUTHORIZED_ERROR)
+          .send({ message: "Incorrect email or password" });
+      }
+      return res.status(err.status).send({ message: err.message });
     });
 };
