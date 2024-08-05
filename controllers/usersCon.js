@@ -45,7 +45,16 @@ module.exports.updateUser = (req, res) => {
   )
     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
     .catch((err) => {
-      return res.status(NOT_FOUND).send({ message: "Error!!!" });
+      console.log(err);
+      if (err.name === "ValidationError") {
+        return res.status(INVALID_DATA).send({ message: "Invalid data" });
+      }
+      if (err.name === "DocumentNotFoundError") {
+        return res.status(NOT_FOUND).send({ message: "Not Found" });
+      }
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server" });
     });
 };
 
