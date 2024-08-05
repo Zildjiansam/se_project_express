@@ -14,11 +14,7 @@ const {
 // const cl = console.log.bind(console);
 
 module.exports.getCurrentUser = (req, res) => {
-  //isolate the user _id from the request body
-
   const { _id } = req.user;
-  //use that _id to find and then respond with the current logged in user
-
   User.findById(_id)
     .orFail()
     .then((user) => {

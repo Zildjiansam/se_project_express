@@ -17,6 +17,7 @@ module.exports.auth = (req, res, next) => {
   //isolate token from authorization
 
   const token = authorization.replace("Bearer ", "");
+
   //Declare payload variable outside of try block so it can be accessed outside of try block
 
   let payload;
