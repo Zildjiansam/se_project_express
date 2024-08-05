@@ -18,17 +18,15 @@ module.exports.getCurrentUser = (req, res) => {
   User.findById(_id)
     .orFail()
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
-      console.log(err.name);
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Not found" });
       }
       if (err.name === "CastError") {
         return res.status(INVALID_DATA).send({ message: "Invalid data" });
       }
-      console.error(err);
       return res
         .status(SERVER_ERROR)
         .send({ message: "An error has occurred on the server" });
@@ -41,11 +39,11 @@ module.exports.updateUser = (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     { name, avatar },
-    { new: true, RunValidators: true, upsert: true }
+    { new: true, RunValidators: true }
   )
+    .orFail()
     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
     .catch((err) => {
-      console.log(err);
       if (err.name === "ValidationError") {
         return res.status(INVALID_DATA).send({ message: "Invalid data" });
       }
@@ -108,12 +106,11 @@ module.exports.loginUser = (req, res) => {
       res.status(REQUEST_SUCCESSFUL).send({ token });
     })
     .catch((err) => {
-      console.log(err);
       if (err.message === "Incorrect email or password") {
         return res
           .status(UNAUTHORIZED_ERROR)
           .send({ message: "Incorrect email or password" });
       }
-      return res.status(err.status).send({ message: err.message });
+      return res.status(SERVER_ERROR).send({ message: err.message });
     });
 };
