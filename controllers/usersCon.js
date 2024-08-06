@@ -39,7 +39,7 @@ module.exports.updateUser = (req, res) => {
   User.findByIdAndUpdate(
     req.user._id,
     { name, avatar },
-    { new: true, RunValidators: true }
+    { new: true, runValidators: true }
   )
     .orFail()
     .then((user) => res.status(REQUEST_SUCCESSFUL).send(user))
